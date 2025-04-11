@@ -334,10 +334,17 @@
           body: JSON.stringify({ email, password })
         });
   
-        const data = await res.json();
+        const text = await res.text();
+        let data = {};
+  
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("⚠️ Backend vrátil obyčajný text:", text);
+        }
   
         if (!res.ok) {
-          alert(data.message || "Prihlásenie zlyhalo.");
+          alert(data.message || text || "Prihlásenie zlyhalo.");
           return;
         }
   
@@ -347,11 +354,12 @@
         closeAuthModal();
         alert("Prihlásenie úspešné!");
       } catch (error) {
-        alert("Chyba pri prihlasovaní.");
+        alert("❌ Chyba pri prihlasovaní.");
         console.error(error);
       }
     }
   </script>
+  
   
   <script>
     const API_BASE = "https://calm-prosperity-production.up.railway.app";
