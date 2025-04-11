@@ -193,7 +193,7 @@
 
   <div class="navbar">
     <div class="navbar-left">
-      <img src="logo.png" alt="Logo" class="logo-heart" />
+      <img src="logo.png" alt="Logo" class="logo" />
       <div class="logo-text">
         <div class="main-title">moje<span>priznaky.sk</span></div>
         <div class="subtitle">S láskou k pacientovi</div>
@@ -373,6 +373,45 @@
       }
     }
   </script>
+  <script>
+    async function submitRegister() {
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const lastName = document.getElementById('regLastName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+  
+      try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+            password,
+            subscriptionTier: "PACIENT"
+          })
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          alert(data.message || "Registrácia zlyhala.");
+          return;
+        }
+  
+        sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("user", JSON.stringify(data.user));
+  
+        closeRegisterModal();
+        alert("Registrácia úspešná!");
+      } catch (error) {
+        alert("Chyba pri registrácii.");
+        console.error(error);
+      }
+    }
+  </script>
+  
   
 
 </body>
