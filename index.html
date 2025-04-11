@@ -276,11 +276,6 @@
     function openRegisterModal() { document.getElementById('registerModal').style.display = 'flex'; }
     function closeRegisterModal() { document.getElementById('registerModal').style.display = 'none'; }
 
-    function sendSymptoms() {
-      const resultBox = document.getElementById("result");
-      const textInput = document.getElementById("symptomText").value.trim();
-      resultBox.innerText = textInput ? "🔍 AI analyzuje..." : "⚠️ Zadaj text alebo nahraj obrázok.";
-    }
   </script>
   <script>
     async function submitLogin() {
@@ -314,51 +309,18 @@
   </script>
   
   <script>
-    const API_BASE = "https://calm-prosperity-production.up.railway.app"; // <-- nahraď vlastnou adresou
+    const API_BASE = "https://calm-prosperity-production.up.railway.app";
   
-    async function submitRegister() {
-      const firstName = document.getElementById('regFirstName').value.trim();
-      const lastName = document.getElementById('regLastName').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value.trim();
-  
-      try {
-        const res = await fetch(`${API_BASE}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firstName,
-            lastName,
-            email,
-            password,
-            subscriptionTier: "PACIENT"
-          })
-        });
-  
-        const data = await res.json();
-  
-        if (!res.ok) {
-          alert(data.message || "Registrácia zlyhala.");
-          return;
-        }
-  
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("user", JSON.stringify(data.user));
-  
-        closeRegisterModal();
-        alert("Registrácia úspešná!");
-      } catch (error) {
-        alert("Chyba pri registrácii.");
-        console.error(error);
-      }
-    }
-  </script>
-  <script>
     async function sendSymptoms() {
       const resultBox = document.getElementById("result");
       const textInput = document.getElementById("symptomText").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
       const token = sessionStorage.getItem("token");
+  
+      if (!token) {
+        resultBox.innerText = "❌ Musíte sa prihlásiť.";
+        return;
+      }
   
       if (!textInput && !imageFile) {
         resultBox.innerText = "⚠️ Zadaj text alebo nahraj obrázok.";
@@ -388,19 +350,19 @@
       }
   
       try {
-        const res = await fetch(`${API_BASE}/api/analyze`, {
+        const res = await fetch(`${API_BASE}/api/freeform`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token
           },
-          body: JSON.stringify({ text: finalText })
+          body: JSON.stringify({ prompt: finalText })
         });
   
         const data = await res.json();
   
         if (!res.ok) {
-          resultBox.innerText = "❌ Chyba: " + (data.message || res.status);
+          resultBox.innerText = `❌ Chyba ${res.status}: ${data.message || "Neznáma chyba"}`;
           return;
         }
   
@@ -411,7 +373,6 @@
       }
     }
   </script>
-  
   
 
 </body>
