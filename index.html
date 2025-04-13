@@ -405,7 +405,7 @@
       const resultBox = document.getElementById("result");
       const textInput = document.getElementById("symptomText").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
-      const token = sessionStorage.getItem("token");
+      const token = localStorage.getItem("token");
   
       if (!token) {
         resultBox.innerText = "❌ Musíte sa prihlásiť.";
@@ -469,8 +469,8 @@
     }
   
     function updateNavbar() {
-      const token = sessionStorage.getItem("token");
-      const user = JSON.parse(sessionStorage.getItem("user") || "null");
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "null");
       const isLoggedIn = !!token;
   
       const loginBtn = document.querySelector('a.btn.btn-outline');
@@ -495,7 +495,7 @@
     }
   
     function logout() {
-      sessionStorage.clear();
+      localStorage.clear();
       updateNavbar();
       alert("✅ Odhlásený!");
     }
@@ -525,8 +525,8 @@
           return;
         }
   
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
   
         updateNavbar();
         closeAuthModal();
@@ -537,82 +537,48 @@
       }
     }
   
-    window.startPremiumCheckout = async function () {
-      const token = sessionStorage.getItem("token");
-      if (!token) {
-        alert("❌ Najprv sa prihláste.");
-        return;
-      }
+    async function submitRegister() {
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const lastName = document.getElementById('regLastName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
   
       try {
-        const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token
-          }
+        const res = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+            password,
+            subscriptionTier: "PACIENT"
+          })
         });
   
-        const url = await res.text();
-        if (res.ok && url.startsWith("https://")) {
-          window.location.href = url;
-        } else {
-          alert("❌ Stripe chyba: " + url);
-        }
-      } catch (error) {
-        console.error("❌ Chyba pri Stripe:", error);
-        alert("❌ Nepodarilo sa pripojiť na Stripe.");
-      }
-    }
+        const data = await res.json();
   
-    document.addEventListener("DOMContentLoaded", updateNavbar);
-  </script>
-  <script>
-    async function checkPremiumUpgrade() {
-      const token = sessionStorage.getItem("token");
-      const user = JSON.parse(sessionStorage.getItem("user") || "null");
-    
-      if (!token || !user) return;
-    
-      const url = new URL(window.location.href);
-      if (!url.pathname.includes("checkout-success")) return;
-    
-      try {
-        const res = await fetch(`${API_BASE}/api/me`, {
-          method: "GET",
-          headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-          }
-        });
-    
         if (!res.ok) {
-          console.warn("❌ Nepodarilo sa načítať používateľa");
+          alert(data.message || "Registrácia zlyhala.");
           return;
         }
-    
-        const updatedUser = await res.json();
-    
-        if (updatedUser.role === "PACIENT_PREMIUM") {
-          console.log("🎉 Užívateľ má teraz PREMIUM plán");
-          const updatedUserStorage = {
-            ...user,
-            plan: "PACIENT_PREMIUM"
-          };
-          sessionStorage.setItem("user", JSON.stringify(updatedUserStorage));
-          updateNavbar(); // aktualizuj vzhľad navbaru
-          alert("🎉 Ďakujeme za predplatné! Máte PREMIUM plán.");
-        }
-    
-      } catch (err) {
-        console.error("❌ Chyba pri kontrole plánu:", err);
+  
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+  
+        closeRegisterModal();
+        alert("Registrácia úspešná!");
+        updateNavbar();
+      } catch (error) {
+        alert("Chyba pri registrácii.");
+        console.error(error);
       }
     }
-    
+  
     document.addEventListener("DOMContentLoaded", () => {
       updateNavbar();
-      checkPremiumUpgrade(); // 🚀
     });
-    </script>
-    
+  </script>
+  
 </body>
 </html>
