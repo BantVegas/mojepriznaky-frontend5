@@ -435,6 +435,68 @@
   
     document.addEventListener("DOMContentLoaded", updateNavbar);
   </script>
+  <script>
+    async function sendSymptoms() {
+      const resultBox = document.getElementById("result");
+      const textInput = document.getElementById("symptomText").value.trim();
+      const imageFile = document.getElementById("imageInput").files[0];
+      const token = sessionStorage.getItem("token");
+  
+      if (!token) {
+        resultBox.innerText = "❌ Musíte sa prihlásiť.";
+        return;
+      }
+  
+      if (!textInput && !imageFile) {
+        resultBox.innerText = "⚠️ Zadaj text alebo nahraj obrázok.";
+        return;
+      }
+  
+      resultBox.innerText = "🔍 AI analyzuje...";
+  
+      let finalText = textInput;
+  
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+  
+        try {
+          const ocrRes = await fetch(`${API_BASE}/api/ocr/upload`, {
+            method: "POST",
+            body: formData
+          });
+          const ocrData = await ocrRes.json();
+          finalText += "\n" + (ocrData.text || "");
+        } catch (err) {
+          resultBox.innerText = "❌ Chyba pri spracovaní obrázka.";
+          return;
+        }
+      }
+  
+      try {
+        const res = await fetch(`${API_BASE}/api/freeform`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({ prompt: finalText })
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          resultBox.innerText = `❌ Chyba ${res.status}: ${data.message || "Neznáma chyba"}`;
+          return;
+        }
+  
+        resultBox.innerText = data.result || "⚠️ AI neposkytla odpoveď.";
+      } catch (error) {
+        resultBox.innerText = "❌ Chyba pri AI analýze.";
+        console.error(error);
+      }
+    }
+  </script>
   
 
 </body>
