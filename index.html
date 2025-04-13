@@ -575,6 +575,33 @@
       }
     }
   
+    window.startPremiumCheckout = async function () {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("❌ Najprv sa prihláste.");
+        return;
+      }
+  
+      try {
+        const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+  
+        const url = await res.text();
+        if (res.ok && url.startsWith("https://")) {
+          window.location.href = url;
+        } else {
+          alert("❌ Stripe chyba: " + url);
+        }
+      } catch (error) {
+        console.error("❌ Chyba pri Stripe:", error);
+        alert("❌ Nepodarilo sa pripojiť na Stripe.");
+      }
+    }
+  
     document.addEventListener("DOMContentLoaded", () => {
       updateNavbar();
     });
