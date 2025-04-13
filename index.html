@@ -401,41 +401,6 @@
   <script>
     const API_BASE = "https://calm-prosperity-production.up.railway.app";
   
-    function updateNavbar() {
-      const token = sessionStorage.getItem("token");
-      const user = JSON.parse(sessionStorage.getItem("user") || "null");
-      const isLoggedIn = !!token;
-  
-      const loginBtn = document.querySelector('a.btn.btn-outline');
-      const premiumBtn = document.querySelector('a.btn.btn-filled');
-  
-      if (loginBtn) {
-        if (isLoggedIn && user) {
-          loginBtn.textContent = user.initials || "Ú"; // fallback ak chýba
-          loginBtn.onclick = logout;
-          loginBtn.style.fontWeight = "bold";
-          loginBtn.style.fontSize = "1rem";
-          loginBtn.style.textTransform = "uppercase";
-        } else {
-          loginBtn.textContent = "LOGIN";
-          loginBtn.onclick = openAuthModal;
-        }
-      }
-  
-      if (premiumBtn) {
-        premiumBtn.style.display = isLoggedIn ? "inline-block" : "none";
-      }
-    }
-  
-    function logout() {
-      sessionStorage.clear();
-      updateNavbar();
-      alert("✅ Odhlásený!");
-    }
-  
-    document.addEventListener("DOMContentLoaded", updateNavbar);
-  </script>
-  <script>
     async function sendSymptoms() {
       const resultBox = document.getElementById("result");
       const textInput = document.getElementById("symptomText").value.trim();
@@ -496,6 +461,77 @@
         console.error(error);
       }
     }
+  
+    function updateNavbar() {
+      const token = sessionStorage.getItem("token");
+      const user = JSON.parse(sessionStorage.getItem("user") || "null");
+      const isLoggedIn = !!token;
+  
+      const loginBtn = document.querySelector('a.btn.btn-outline');
+      const premiumBtn = document.querySelector('a.btn.btn-filled');
+  
+      if (loginBtn) {
+        if (isLoggedIn && user) {
+          loginBtn.textContent = user.initials || "Ú";
+          loginBtn.onclick = logout;
+          loginBtn.style.fontWeight = "bold";
+          loginBtn.style.fontSize = "1rem";
+          loginBtn.style.textTransform = "uppercase";
+        } else {
+          loginBtn.textContent = "LOGIN";
+          loginBtn.onclick = openAuthModal;
+        }
+      }
+  
+      if (premiumBtn) {
+        premiumBtn.style.display = isLoggedIn ? "inline-block" : "none";
+      }
+    }
+  
+    function logout() {
+      sessionStorage.clear();
+      updateNavbar();
+      alert("✅ Odhlásený!");
+    }
+  
+    async function submitLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+  
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+  
+        const text = await res.text();
+        let data = {};
+  
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn("⚠️ Backend vrátil obyčajný text:", text);
+        }
+  
+        if (!res.ok) {
+          alert(data.message || text || "Prihlásenie zlyhalo.");
+          return;
+        }
+  
+        sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("user", JSON.stringify(data.user));
+  
+        updateNavbar(); // 🔁 kľúčové volanie
+        closeAuthModal();
+        alert("Prihlásenie úspešné!");
+      } catch (error) {
+        alert("❌ Chyba pri prihlasovaní.");
+        console.error(error);
+      }
+    }
+  
+    document.addEventListener("DOMContentLoaded", updateNavbar);
   </script>
   
 
