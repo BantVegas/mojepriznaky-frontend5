@@ -537,10 +537,7 @@
       }
     }
   
-    document.addEventListener("DOMContentLoaded", updateNavbar);
-  </script>
-  <script>
-    async function startPremiumCheckout() {
+    window.startPremiumCheckout = async function () {
       const token = sessionStorage.getItem("token");
       if (!token) {
         alert("❌ Najprv sa prihláste.");
@@ -566,9 +563,9 @@
         alert("❌ Nepodarilo sa pripojiť na Stripe.");
       }
     }
+  
+    document.addEventListener("DOMContentLoaded", updateNavbar);
   </script>
-  
-  
   
 </body>
 </html>
