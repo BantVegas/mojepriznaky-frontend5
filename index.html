@@ -448,7 +448,13 @@
           body: JSON.stringify({ prompt: finalText })
         });
   
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          resultBox.innerText = `❌ Chyba ${res.status}: Neplatná odpoveď zo servera.`;
+          return;
+        }
   
         if (!res.ok) {
           resultBox.innerText = `❌ Chyba ${res.status}: ${data.message || "Neznáma chyba"}`;
@@ -522,7 +528,7 @@
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("user", JSON.stringify(data.user));
   
-        updateNavbar(); // 🔁 kľúčové volanie
+        updateNavbar();
         closeAuthModal();
         alert("Prihlásenie úspešné!");
       } catch (error) {
@@ -534,6 +540,5 @@
     document.addEventListener("DOMContentLoaded", updateNavbar);
   </script>
   
-
 </body>
 </html>
