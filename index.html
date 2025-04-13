@@ -360,72 +360,6 @@
     }
   </script>
   
-  
-  <script>
-    const API_BASE = "https://calm-prosperity-production.up.railway.app";
-  
-    async function sendSymptoms() {
-      const resultBox = document.getElementById("result");
-      const textInput = document.getElementById("symptomText").value.trim();
-      const imageFile = document.getElementById("imageInput").files[0];
-      const token = sessionStorage.getItem("token");
-  
-      if (!token) {
-        resultBox.innerText = "❌ Musíte sa prihlásiť.";
-        return;
-      }
-  
-      if (!textInput && !imageFile) {
-        resultBox.innerText = "⚠️ Zadaj text alebo nahraj obrázok.";
-        return;
-      }
-  
-      resultBox.innerText = "🔍 AI analyzuje...";
-  
-      let finalText = textInput;
-  
-      // OCR z obrázka (voliteľné)
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-  
-        try {
-          const ocrRes = await fetch(`${API_BASE}/api/ocr/upload`, {
-            method: "POST",
-            body: formData
-          });
-          const ocrData = await ocrRes.json();
-          finalText += "\n" + (ocrData.text || "");
-        } catch (err) {
-          resultBox.innerText = "❌ Chyba pri spracovaní obrázka.";
-          return;
-        }
-      }
-  
-      try {
-        const res = await fetch(`${API_BASE}/api/freeform`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
-          },
-          body: JSON.stringify({ prompt: finalText })
-        });
-  
-        const data = await res.json();
-  
-        if (!res.ok) {
-          resultBox.innerText = `❌ Chyba ${res.status}: ${data.message || "Neznáma chyba"}`;
-          return;
-        }
-  
-        resultBox.innerText = data.result || "⚠️ AI neposkytla odpoveď.";
-      } catch (error) {
-        resultBox.innerText = "❌ Chyba pri AI analýze.";
-        console.error(error);
-      }
-    }
-  </script>
   <script>
     async function submitRegister() {
       const firstName = document.getElementById('regFirstName').value.trim();
@@ -464,7 +398,43 @@
       }
     }
   </script>
+  <script>
+    const API_BASE = "https://calm-prosperity-production.up.railway.app";
   
+    function updateNavbar() {
+      const token = sessionStorage.getItem("token");
+      const user = JSON.parse(sessionStorage.getItem("user") || "null");
+      const isLoggedIn = !!token;
+  
+      const loginBtn = document.querySelector('a.btn.btn-outline');
+      const premiumBtn = document.querySelector('a.btn.btn-filled');
+  
+      if (loginBtn) {
+        if (isLoggedIn && user) {
+          loginBtn.textContent = user.initials || "Ú"; // fallback ak chýba
+          loginBtn.onclick = logout;
+          loginBtn.style.fontWeight = "bold";
+          loginBtn.style.fontSize = "1rem";
+          loginBtn.style.textTransform = "uppercase";
+        } else {
+          loginBtn.textContent = "LOGIN";
+          loginBtn.onclick = openAuthModal;
+        }
+      }
+  
+      if (premiumBtn) {
+        premiumBtn.style.display = isLoggedIn ? "inline-block" : "none";
+      }
+    }
+  
+    function logout() {
+      sessionStorage.clear();
+      updateNavbar();
+      alert("✅ Odhlásený!");
+    }
+  
+    document.addEventListener("DOMContentLoaded", updateNavbar);
+  </script>
   
 
 </body>
