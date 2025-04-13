@@ -566,6 +566,53 @@
   
     document.addEventListener("DOMContentLoaded", updateNavbar);
   </script>
-  
+  <script>
+    async function checkPremiumUpgrade() {
+      const token = sessionStorage.getItem("token");
+      const user = JSON.parse(sessionStorage.getItem("user") || "null");
+    
+      if (!token || !user) return;
+    
+      const url = new URL(window.location.href);
+      if (!url.pathname.includes("checkout-success")) return;
+    
+      try {
+        const res = await fetch(`${API_BASE}/api/me`, {
+          method: "GET",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+          }
+        });
+    
+        if (!res.ok) {
+          console.warn("❌ Nepodarilo sa načítať používateľa");
+          return;
+        }
+    
+        const updatedUser = await res.json();
+    
+        if (updatedUser.role === "PACIENT_PREMIUM") {
+          console.log("🎉 Užívateľ má teraz PREMIUM plán");
+          const updatedUserStorage = {
+            ...user,
+            plan: "PACIENT_PREMIUM"
+          };
+          sessionStorage.setItem("user", JSON.stringify(updatedUserStorage));
+          updateNavbar(); // aktualizuj vzhľad navbaru
+          alert("🎉 Ďakujeme za predplatné! Máte PREMIUM plán.");
+        }
+    
+      } catch (err) {
+        console.error("❌ Chyba pri kontrole plánu:", err);
+      }
+    }
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      updateNavbar();
+      checkPremiumUpgrade(); // 🚀
+    });
+    </script>
+    
 </body>
 </html>
