@@ -602,10 +602,33 @@
       }
     }
   
+    async function restoreSession() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+  
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      });
+  
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        updateNavbar();
+      } else {
+        console.warn("❌ Obnovenie relácie zlyhalo");
+        localStorage.clear();
+        updateNavbar();
+      }
+    }
+  
     document.addEventListener("DOMContentLoaded", () => {
-      updateNavbar();
+      restoreSession();
     });
   </script>
+  
   
 </body>
 </html>
