@@ -448,16 +448,16 @@
           body: JSON.stringify({ prompt: finalText })
         });
   
-        let data;
+        const text = await res.text();
+        let data = {};
         try {
-          data = await res.json();
-        } catch {
-          resultBox.innerText = `❌ Chyba ${res.status}: Neplatná odpoveď zo servera.`;
-          return;
+          data = JSON.parse(text);
+        } catch (err) {
+          console.warn("⚠️ Neplatná JSON odpoveď:", text);
         }
   
         if (!res.ok) {
-          resultBox.innerText = `❌ Chyba ${res.status}: ${data.message || "Neznáma chyba"}`;
+          resultBox.innerText = `❌ Chyba ${res.status}: ${data.message || text || "Neznáma chyba"}`;
           return;
         }
   
@@ -539,6 +539,36 @@
   
     document.addEventListener("DOMContentLoaded", updateNavbar);
   </script>
+  <script>
+    async function startPremiumCheckout() {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        alert("❌ Najprv sa prihláste.");
+        return;
+      }
+  
+      try {
+        const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+  
+        const url = await res.text();
+        if (res.ok && url.startsWith("https://")) {
+          window.location.href = url;
+        } else {
+          alert("❌ Stripe chyba: " + url);
+        }
+      } catch (error) {
+        console.error("❌ Chyba pri Stripe:", error);
+        alert("❌ Nepodarilo sa pripojiť na Stripe.");
+      }
+    }
+  </script>
+  
+  
   
 </body>
 </html>
