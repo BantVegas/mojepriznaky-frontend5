@@ -316,6 +316,32 @@
   const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
 
 // Auth functions (zostávajú rovnaké)... až po updateNavbar()
+function updateNavbar() {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || null);
+  const loginBtn = document.querySelector('.btn.btn-outline');
+  const premiumBtn = document.querySelector('.btn.btn-filled');
+
+  if (loginBtn) {
+    if (token && user) {
+      loginBtn.textContent = user.initials || "Ú";
+      loginBtn.onclick = logout;
+      loginBtn.style.cssText = "font-weight: bold; font-size: 1rem; text-transform: uppercase;";
+    } else {
+      loginBtn.textContent = "LOGIN";
+      loginBtn.onclick = openAuthModal;
+      loginBtn.style.cssText = "";
+    }
+  }
+
+  if (premiumBtn) {
+    premiumBtn.style.display = token ? "inline-block" : "none";
+  }
+}
+
+function openAuthModal() {
+  document.getElementById('authModal').style.display = 'flex';
+}
 
 // Preview obrázka pri výbere
 document.addEventListener('DOMContentLoaded', () => {
