@@ -336,7 +336,7 @@
       alert("Úspešne odhlásené!");
     }
     
-    // 🧠 Zobrazenie mena/inicialov
+    // 🧠 Iniciály alebo LOGIN tlačidlo
     function updateNavbar() {
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user") || null);
@@ -360,14 +360,14 @@
       }
     }
     
-    // ✅ Inicializácia
+    // 🔁 Inicializácia po načítaní
     document.addEventListener('DOMContentLoaded', () => {
       updateNavbar();
       if (window.location.href.includes('checkout-success')) {
         checkPremiumUpgrade();
       }
     
-      // Preview obrázka
+      // 🖼️ Zobrazenie náhľadu obrázka
       const imageInput = document.getElementById('imageInput');
       const preview = document.createElement('img');
       preview.id = "previewImage";
@@ -390,7 +390,7 @@
       });
     });
     
-    // 🧠 OCR + AI analýza
+    // 🧠 Odoslanie príznakov (text + obrázok)
     async function sendSymptoms() {
       const token = localStorage.getItem("token");
       if (!token) return alert("Najprv sa prihláste");
@@ -403,10 +403,9 @@
     
       try {
         resultBox.textContent = "🔍 Analyzujem...";
-    
         let finalText = text;
     
-        // 📷 OCR obrázok
+        // 📸 OCR upload
         if (imageFile) {
           const formData = new FormData();
           formData.append('file', imageFile);
@@ -429,7 +428,7 @@
           }
         }
     
-        // 🤖 AI analýza
+        // 🤖 AI volanie
         const analysisRes = await fetch(`${API_BASE}/api/freeform`, {
           method: 'POST',
           headers: {
@@ -451,6 +450,50 @@
       } catch (error) {
         console.error("Analysis error:", error);
         resultBox.textContent = "❌ Chyba pri analýze: " + error.message;
+      }
+    }
+    
+    // 📝 Registrácia používateľa
+    async function submitRegister() {
+      const firstName = document.getElementById('regFirstName').value.trim();
+      const lastName = document.getElementById('regLastName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+    
+      if (!firstName || !lastName || !email || !password) {
+        return alert("Vyplňte všetky polia");
+      }
+    
+      try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+            password,
+            subscriptionTier: "PACIENT"
+          })
+        });
+    
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        
+        const data = await res.json();
+        if (!data.token) throw new Error("Chýbajúci token v odpovedi");
+    
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        closeRegisterModal();
+        updateNavbar();
+        alert("Úspešná registrácia!");
+      } catch (error) {
+        console.error("Registration error:", error);
+        alert(`Registrácia zlyhala: ${error.message}`);
       }
     }
     
@@ -477,7 +520,7 @@
       }
     }
     
-    // 🎓 Premium kontrola
+    // 🏷️ Kontrola PREMIUM po návrate z platby
     async function checkPremiumUpgrade() {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -508,11 +551,12 @@
       window.open("https://www.google.com/maps/search/zubná+pohotovosť", "_blank");
     }
     
-    // ⏳ Placeholdery
+    // ⏳ Placeholder funkcie
     function sendToDoctor() { alert("Funkcia vo vývoji"); }
     function showHistory() { alert("Funkcia vo vývoji"); }
     function setChildMode() { alert("Funkcia vo vývoji"); }
     </script>
+    
     
 </body>
 </html>
