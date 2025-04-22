@@ -496,7 +496,39 @@
         alert(`Registrácia zlyhala: ${error.message}`);
       }
     }
-    
+    async function submitLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+
+  if (!email || !password) return alert("Vyplňte všetky polia");
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+
+    const data = await res.json();
+    if (!data.token) throw new Error("Chýbajúci token v odpovedi");
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    closeAuthModal();
+    updateNavbar();
+    alert("Úspešné prihlásenie!");
+  } catch (error) {
+    console.error("Login error:", error);
+    alert(`Prihlásenie zlyhalo: ${error.message}`);
+  }
+}
+
     // 💳 Stripe Checkout
     async function startPremiumCheckout() {
       const token = localStorage.getItem("token");
