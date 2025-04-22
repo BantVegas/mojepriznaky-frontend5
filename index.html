@@ -342,6 +342,16 @@ function updateNavbar() {
 function openAuthModal() {
   document.getElementById('authModal').style.display = 'flex';
 }
+function closeAuthModal() {
+  document.getElementById('authModal').style.display = 'none';
+}
+
+function logout() {
+  localStorage.clear();
+  updateNavbar();
+  alert("Úspešne odhlásené!");
+}
+
 
 // Preview obrázka pri výbere
 document.addEventListener('DOMContentLoaded', () => {
