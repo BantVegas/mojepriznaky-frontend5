@@ -312,163 +312,161 @@
       <button onclick="closeRegisterModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
     </div>
   </div>
-<script>
-  const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
-
-// Auth functions (zostávajú rovnaké)... až po updateNavbar()
-function updateNavbar() {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || null);
-  const loginBtn = document.querySelector('.btn.btn-outline');
-  const premiumBtn = document.querySelector('.btn.btn-filled');
-
-  if (loginBtn) {
-    if (token && user) {
-      loginBtn.textContent = user.initials || "Ú";
-      loginBtn.onclick = logout;
-      loginBtn.style.cssText = "font-weight: bold; font-size: 1rem; text-transform: uppercase;";
-    } else {
-      loginBtn.textContent = "LOGIN";
-      loginBtn.onclick = openAuthModal;
-      loginBtn.style.cssText = "";
+  <script>
+    const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
+    
+    // 🔐 Modálne okná
+    function openAuthModal() {
+      document.getElementById('authModal').style.display = 'flex';
     }
-  }
-
-  if (premiumBtn) {
-    premiumBtn.style.display = token ? "inline-block" : "none";
-  }
-}
-
-function openAuthModal() {
-  document.getElementById('authModal').style.display = 'flex';
-}
-function closeAuthModal() {
-  document.getElementById('authModal').style.display = 'none';
-}
-
-function logout() {
-  localStorage.clear();
-  updateNavbar();
-  alert("Úspešne odhlásené!");
-}
-
-
-// Preview obrázka pri výbere
-document.addEventListener('DOMContentLoaded', () => {
-  updateNavbar();
-  if (window.location.href.includes('checkout-success')) {
-    checkPremiumUpgrade();
-  }
-
-  const imageInput = document.getElementById('imageInput');
-  const preview = document.createElement('img');
-  preview.id = "previewImage";
-  preview.style.cssText = "max-width:100%; margin-top:1rem; border:1px solid #ccc; border-radius:8px; display:none;";
-  imageInput.closest('.card').appendChild(preview);
-
-  imageInput.addEventListener('change', () => {
-    const file = imageInput.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    } else {
-      preview.src = "";
-      preview.style.display = 'none';
+    function closeAuthModal() {
+      document.getElementById('authModal').style.display = 'none';
     }
-  });
-});
-
-// AI + OCR analýza
-async function sendSymptoms() {
-  const token = localStorage.getItem("token");
-  if (!token) return alert("Najprv sa prihláste");
-
-  const text = document.getElementById('symptomText').value.trim();
-  const imageFile = document.getElementById('imageInput').files[0];
-  const resultBox = document.getElementById('result');
-
-  if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
-
-  try {
-    resultBox.textContent = "🔍 Analyzujem...";
-
-    let finalText = text;
-
-    // OCR obrázok
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append('file', imageFile);
-
-      const ocrRes = await fetch(`${API_BASE}/api/ocr/upload`, {
-        method: 'POST',
-        body: formData
-      });
-
-      const ocrData = await ocrRes.json();
-      console.log("📸 OCR výstup:", ocrData);
-
-      if (ocrData.text && ocrData.text.length > 3) {
-        finalText += `\nText z obrázka:\n${ocrData.text}`;
+    function openRegisterModal() {
+      document.getElementById('registerModal').style.display = 'flex';
+    }
+    function closeRegisterModal() {
+      document.getElementById('registerModal').style.display = 'none';
+    }
+    
+    // 🔐 Odhlásenie
+    function logout() {
+      localStorage.clear();
+      updateNavbar();
+      alert("Úspešne odhlásené!");
+    }
+    
+    // 🧠 Zobrazenie mena/inicialov
+    function updateNavbar() {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || null);
+      const loginBtn = document.querySelector('.btn.btn-outline');
+      const premiumBtn = document.querySelector('.btn.btn-filled');
+    
+      if (loginBtn) {
+        if (token && user) {
+          loginBtn.textContent = user.initials || "Ú";
+          loginBtn.onclick = logout;
+          loginBtn.style.cssText = "font-weight: bold; font-size: 1rem; text-transform: uppercase;";
+        } else {
+          loginBtn.textContent = "LOGIN";
+          loginBtn.onclick = openAuthModal;
+          loginBtn.style.cssText = "";
+        }
+      }
+    
+      if (premiumBtn) {
+        premiumBtn.style.display = token ? "inline-block" : "none";
       }
     }
-
-    // AI odpoveď
-    const analysisRes = await fetch(`${API_BASE}/api/freeform`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ prompt: finalText })
+    
+    // ✅ Inicializácia
+    document.addEventListener('DOMContentLoaded', () => {
+      updateNavbar();
+      if (window.location.href.includes('checkout-success')) {
+        checkPremiumUpgrade();
+      }
+    
+      // Preview obrázka
+      const imageInput = document.getElementById('imageInput');
+      const preview = document.createElement('img');
+      preview.id = "previewImage";
+      preview.style.cssText = "max-width:100%; margin-top:1rem; border:1px solid #ccc; border-radius:8px; display:none;";
+      imageInput.closest('.card').appendChild(preview);
+    
+      imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = e => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          preview.src = "";
+          preview.style.display = 'none';
+        }
+      });
     });
-
-    if (!analysisRes.ok) {
-      const errorText = await analysisRes.text();
-      console.warn("❌ AI chyba:", errorText);
-      throw new Error("Chyba analýzy");
+    
+    // 🧠 OCR + AI analýza
+    async function sendSymptoms() {
+      const token = localStorage.getItem("token");
+      if (!token) return alert("Najprv sa prihláste");
+    
+      const text = document.getElementById('symptomText').value.trim();
+      const imageFile = document.getElementById('imageInput').files[0];
+      const resultBox = document.getElementById('result');
+    
+      if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
+    
+      try {
+        resultBox.textContent = "🔍 Analyzujem...";
+    
+        let finalText = text;
+    
+        // 📷 OCR obrázok
+        if (imageFile) {
+          const formData = new FormData();
+          formData.append('file', imageFile);
+    
+          const ocrRes = await fetch(`${API_BASE}/api/ocr/upload`, {
+            method: 'POST',
+            body: formData
+          });
+    
+          if (!ocrRes.ok) {
+            const err = await ocrRes.text();
+            throw new Error("OCR zlyhalo: " + err);
+          }
+    
+          const ocrData = await ocrRes.json();
+          console.log("📸 OCR výstup:", ocrData);
+    
+          if (ocrData.text && ocrData.text.length > 3) {
+            finalText += `\nText z obrázka:\n${ocrData.text}`;
+          }
+        }
+    
+        // 🤖 AI analýza
+        const analysisRes = await fetch(`${API_BASE}/api/freeform`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ prompt: finalText })
+        });
+    
+        if (!analysisRes.ok) {
+          const errorText = await analysisRes.text();
+          console.warn("❌ AI chyba:", errorText);
+          throw new Error("Chyba analýzy");
+        }
+    
+        const analysisData = await analysisRes.json();
+        resultBox.textContent = analysisData.result || "Nepodarilo sa analyzovať";
+    
+      } catch (error) {
+        console.error("Analysis error:", error);
+        resultBox.textContent = "❌ Chyba pri analýze: " + error.message;
+      }
     }
-
-    const analysisData = await analysisRes.json();
-    resultBox.textContent = analysisData.result || "Nepodarilo sa analyzovať";
-
-  } catch (error) {
-    console.error("Analysis error:", error);
-    resultBox.textContent = "❌ Chyba pri analýze: " + error.message;
-  }
-}
-
-
-    // Map functions
-    function openEmergencyMap() {
-      window.open("https://www.google.com/maps/search/pohotovosť+v+okolí", "_blank");
-    }
-
-    function openDentalMap() {
-      window.open("https://www.google.com/maps/search/zubná+pohotovosť", "_blank");
-    }
-
-    // Placeholder functions
-    function sendToDoctor() { alert("Funkcia vo vývoji"); }
-    function showHistory() { alert("Funkcia vo vývoji"); }
-    function setChildMode() { alert("Funkcia vo vývoji"); }
-
-    // Stripe checkout
+    
+    // 💳 Stripe Checkout
     async function startPremiumCheckout() {
       const token = localStorage.getItem("token");
       if (!token) return alert("Najprv sa prihláste");
-
+    
       try {
         const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }
         });
-
+    
         if (!res.ok) throw new Error("Stripe error");
-        
+    
         const url = await res.text();
         if (url.startsWith('https://')) {
           window.location.href = url;
@@ -478,6 +476,43 @@ async function sendSymptoms() {
         alert("Chyba pri platbe");
       }
     }
-  </script>
+    
+    // 🎓 Premium kontrola
+    async function checkPremiumUpgrade() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+    
+      try {
+        const res = await fetch(`${API_BASE}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+    
+        if (!res.ok) throw new Error("Kontrola PREMIUM zlyhala");
+    
+        const data = await res.json();
+        if (data.role === "PACIENT_PREMIUM") {
+          localStorage.setItem("user", JSON.stringify(data));
+          updateNavbar();
+          alert("🎉 Úspešne aktivované PREMIUM!");
+        }
+      } catch (error) {
+        console.error("Premium check error:", error);
+      }
+    }
+    
+    // 📍 Mapy
+    function openEmergencyMap() {
+      window.open("https://www.google.com/maps/search/pohotovosť+v+okolí", "_blank");
+    }
+    function openDentalMap() {
+      window.open("https://www.google.com/maps/search/zubná+pohotovosť", "_blank");
+    }
+    
+    // ⏳ Placeholdery
+    function sendToDoctor() { alert("Funkcia vo vývoji"); }
+    function showHistory() { alert("Funkcia vo vývoji"); }
+    function setChildMode() { alert("Funkcia vo vývoji"); }
+    </script>
+    
 </body>
 </html>
