@@ -392,66 +392,43 @@
     
     // 🧠 Odoslanie príznakov (text + obrázok)
     async function sendSymptoms() {
-      const token = localStorage.getItem("token");
-      if (!token) return alert("Najprv sa prihláste");
-    
-      const text = document.getElementById('symptomText').value.trim();
-      const imageFile = document.getElementById('imageInput').files[0];
-      const resultBox = document.getElementById('result');
-    
-      if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
-    
-      try {
-        resultBox.textContent = "🔍 Analyzujem...";
-        let finalText = text;
-    
-        // 📸 OCR upload
-        if (imageFile) {
-          const formData = new FormData();
-          formData.append('file', imageFile);
-    
-          const ocrRes = await fetch(`${API_BASE}/api/ocr/upload`, {
-            method: 'POST',
-            body: formData
-          });
-    
-          if (!ocrRes.ok) {
-            const err = await ocrRes.text();
-            throw new Error("OCR zlyhalo: " + err);
-          }
-    
-          const ocrData = await ocrRes.json();
-          console.log("📸 OCR výstup:", ocrData);
-    
-          if (ocrData.text && ocrData.text.length > 3) {
-            finalText += `\nText z obrázka:\n${ocrData.text}`;
-          }
-        }
-    
-        // 🤖 AI volanie
-        const analysisRes = await fetch(`${API_BASE}/api/freeform`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ prompt: finalText })
-        });
-    
-        if (!analysisRes.ok) {
-          const errorText = await analysisRes.text();
-          console.warn("❌ AI chyba:", errorText);
-          throw new Error("Chyba analýzy");
-        }
-    
-        const analysisData = await analysisRes.json();
-        resultBox.textContent = analysisData.result || "Nepodarilo sa analyzovať";
-    
-      } catch (error) {
-        console.error("Analysis error:", error);
-        resultBox.textContent = "❌ Chyba pri analýze: " + error.message;
-      }
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Najprv sa prihláste");
+
+  const text = document.getElementById('symptomText').value.trim();
+  const imageFile = document.getElementById('imageInput').files[0];
+  const resultBox = document.getElementById('result');
+
+  if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
+
+  try {
+    resultBox.textContent = "🔍 Analyzujem...";
+
+    const formData = new FormData();
+    formData.append("prompt", text);
+    if (imageFile) formData.append("file", imageFile);
+
+    const response = await fetch(`${API_BASE}/api/diagnose`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error("Chyba AI: " + errorText);
     }
+
+    const data = await response.json();
+    resultBox.textContent = data.result || "Nepodarilo sa analyzovať";
+  } catch (error) {
+    console.error("Diagnose error:", error);
+    resultBox.textContent = "❌ Chyba pri AI analýze: " + error.message;
+  }
+}
+
     
     // 📝 Registrácia používateľa
     async function submitRegister() {
