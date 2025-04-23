@@ -296,7 +296,18 @@
       </div>
       <button onclick="closeAuthModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
     </div>
+    <!-- Modal pre odoslanie doktorovi -->
+<div id="doctorModal" class="modal">
+  <div class="modal-content">
+    <h3>📤 Poslať analýzu doktorovi</h3>
+    <label for="doctorEmail">E-mail doktora:</label>
+    <input type="email" id="doctorEmail" class="modal-input" placeholder="napr. doktor@nemocnica.sk" />
+    <label for="diagnosisSelect">Vyber analýzu:</label>
+    <select id="diagnosisSelect" class="modal-input"></select>
+    <button class="btn btn-primary" onclick="submitToDoctor()" style="width:100%; margin-top:1rem;">Odoslať</button>
+    <button class="btn" onclick="closeDoctorModal()" style="width:100%; margin-top:0.5rem;">Zavrieť</button>
   </div>
+</div>
 
   <div id="registerModal" class="modal">
     <div class="modal-content">
@@ -312,6 +323,16 @@
       <button onclick="closeRegisterModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
     </div>
   </div>
+  <!-- Modal pre históriu -->
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <h2 style="text-align:center;">🕘 História AI analýz</h2>
+    <div id="historyList">Načítavam...</div>
+    <button class="btn" onclick="closeHistoryModal()" style="width:100%; margin-top:1rem;">Zavrieť</button>
+  </div>
+</div>
+
+
   <script>
     const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
     
@@ -328,6 +349,51 @@
       updateNavbar();
       alert("Úspešne odhlásené!");
     }
+    function openDoctorModal() {
+  const diagnoses = JSON.parse(localStorage.getItem("diagnosisHistory") || "[]");
+  const select = document.getElementById("diagnosisSelect");
+  select.innerHTML = diagnoses.map((d, i) =>
+    `<option value="${i}">${new Date(d.timestamp).toLocaleString("sk-SK")}</option>`
+  ).join("");
+
+  document.getElementById("doctorModal").style.display = "flex";
+}
+
+function closeDoctorModal() {
+  document.getElementById("doctorModal").style.display = "none";
+}
+
+async function submitToDoctor() {
+  const token = localStorage.getItem("token");
+  const email = document.getElementById("doctorEmail").value.trim();
+  const index = document.getElementById("diagnosisSelect").value;
+  const history = JSON.parse(localStorage.getItem("diagnosisHistory") || "[]");
+
+  if (!token || !email || !history[index]) {
+    return alert("Vyplňte všetky údaje.");
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/diagnose/send`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        doctorEmail: email,
+        diagnosisId: history[index].id
+      })
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    alert("✅ Analýza bola odoslaná doktorovi.");
+    closeDoctorModal();
+  } catch (err) {
+    alert("❌ Chyba pri odosielaní: " + err.message);
+  }
+}
+
     
     function updateNavbar() {
       const token = localStorage.getItem("token");
@@ -423,36 +489,38 @@
     }
     
     async function showHistory() {
-      const token = localStorage.getItem("token");
-      if (!token) return alert("Najprv sa prihláste");
-    
-      try {
-        const res = await fetch(`${API_BASE}/api/diagnose/history`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-    
-        if (!res.ok) throw new Error(await res.text());
-    
-        const history = await res.json();
-        const historyList = document.getElementById('historyList');
-    
-        if (!Array.isArray(history) || history.length === 0) {
-          historyList.innerHTML = "<p>🕘 Zatiaľ žiadna analýza</p>";
-        } else {
-          let html = "<ul style='padding-left:1rem'>";
-          for (const item of history) {
-            html += `<li><b>${new Date(item.timestamp).toLocaleString("sk-SK")}</b><br>${item.result}</li><br>`;
-          }
-          html += "</ul>";
-          historyList.innerHTML = html;
-        }
-    
-        openHistoryModal();
-      } catch (error) {
-        console.error("História error:", error);
-        alert("❌ Chyba pri načítaní histórie: " + error.message);
-      }
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Najprv sa prihláste");
+
+  try {
+    const res = await fetch(`${API_BASE}/api/diagnose/history`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    const history = await res.json();
+    localStorage.setItem("diagnosisHistory", JSON.stringify(history)); // uložíme lokálne
+
+    const resultBox = document.getElementById('result');
+    if (!Array.isArray(history) || history.length === 0) {
+      resultBox.innerHTML = "🕘 Zatiaľ žiadna analýza.";
+      return;
     }
+
+    let html = `<h3>🕘 História:</h3><ul>`;
+    for (const item of history) {
+      html += `<li><b>${new Date(item.timestamp).toLocaleString("sk-SK")}</b>: ${item.result}</li>`;
+    }
+    html += "</ul>";
+    resultBox.innerHTML = html;
+
+  } catch (error) {
+    console.error("História error:", error);
+    alert("❌ Chyba pri načítaní histórie: " + error.message);
+  }
+}
+
     
     async function submitLogin() {
       const email = document.getElementById('loginEmail').value.trim();
