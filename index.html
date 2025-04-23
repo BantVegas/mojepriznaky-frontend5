@@ -284,19 +284,21 @@
     <p>Kontakt: <a href="mailto:mojepriznaky@gmail.com" style="color:white;text-decoration:underline;">mojepriznaky@gmail.com</a></p>
   </footer>
 
-  <!-- Modals -->
-  <div id="authModal" class="modal">
-    <div class="modal-content">
-      <h2 style="text-align:center;">Prihlásenie</h2>
-      <input id="loginEmail" type="email" class="modal-input" placeholder="Email">
-      <input id="loginPassword" type="password" class="modal-input" placeholder="Heslo">
-      <button class="btn btn-primary" onclick="submitLogin()" style="width:100%;">Prihlásiť sa</button>
-      <div class="switch-modal">
-        Nemáte účet? <a onclick="closeAuthModal(); openRegisterModal()">Zaregistrujte sa</a>
-      </div>
-      <button onclick="closeAuthModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
+  <!-- Modálne okno pre prihlásenie -->
+<div id="authModal" class="modal">
+  <div class="modal-content">
+    <h2 style="text-align:center;">Prihlásenie</h2>
+    <input id="loginEmail" type="email" class="modal-input" placeholder="Email">
+    <input id="loginPassword" type="password" class="modal-input" placeholder="Heslo">
+    <button class="btn btn-primary" onclick="submitLogin()" style="width:100%;">Prihlásiť sa</button>
+    <div class="switch-modal">
+      Nemáte účet? <a onclick="closeAuthModal(); openRegisterModal()">Zaregistrujte sa</a>
     </div>
-    <!-- Modal pre odoslanie doktorovi -->
+    <button onclick="closeAuthModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
+  </div>
+</div>
+
+<!-- Modálne okno pre odoslanie analýzy doktorovi -->
 <div id="doctorModal" class="modal">
   <div class="modal-content">
     <h3>📤 Poslať analýzu doktorovi</h3>
@@ -309,21 +311,23 @@
   </div>
 </div>
 
-  <div id="registerModal" class="modal">
-    <div class="modal-content">
-      <h2 style="text-align:center;">Registrácia</h2>
-      <input id="regFirstName" type="text" class="modal-input" placeholder="Meno">
-      <input id="regLastName" type="text" class="modal-input" placeholder="Priezvisko">
-      <input id="regEmail" type="email" class="modal-input" placeholder="Email">
-      <input id="regPassword" type="password" class="modal-input" placeholder="Heslo">
-      <button class="btn btn-primary" onclick="submitRegister()" style="width:100%;">Zaregistrovať sa</button>
-      <div class="switch-modal">
-        Máte účet? <a onclick="closeRegisterModal(); openAuthModal()">Prihláste sa</a>
-      </div>
-      <button onclick="closeRegisterModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
+<!-- Modálne okno pre registráciu -->
+<div id="registerModal" class="modal">
+  <div class="modal-content">
+    <h2 style="text-align:center;">Registrácia</h2>
+    <input id="regFirstName" type="text" class="modal-input" placeholder="Meno">
+    <input id="regLastName" type="text" class="modal-input" placeholder="Priezvisko">
+    <input id="regEmail" type="email" class="modal-input" placeholder="Email">
+    <input id="regPassword" type="password" class="modal-input" placeholder="Heslo">
+    <button class="btn btn-primary" onclick="submitRegister()" style="width:100%;">Zaregistrovať sa</button>
+    <div class="switch-modal">
+      Máte účet? <a onclick="closeRegisterModal(); openAuthModal()">Prihláste sa</a>
     </div>
+    <button onclick="closeRegisterModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
   </div>
-  <!-- Modal pre históriu -->
+</div>
+
+<!-- Modálne okno pre históriu -->
 <div id="historyModal" class="modal">
   <div class="modal-content">
     <h2 style="text-align:center;">🕘 História AI analýz</h2>
@@ -331,6 +335,7 @@
     <button class="btn" onclick="closeHistoryModal()" style="width:100%; margin-top:1rem;">Zavrieť</button>
   </div>
 </div>
+
 <script>
   const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
   
