@@ -473,6 +473,43 @@
         alert(`Registrácia zlyhala: ${error.message}`);
       }
     }
+
+    async function showHistory() {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Najprv sa prihláste");
+
+  try {
+    const res = await fetch(`${API_BASE}/api/diagnose/history`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg);
+    }
+
+    const history = await res.json();
+    const resultBox = document.getElementById('result');
+    if (!Array.isArray(history) || history.length === 0) {
+      resultBox.innerHTML = "🕘 Žiadna história zatiaľ neexistuje.";
+      return;
+    }
+
+    let html = `<h3>🕘 História analýz:</h3><ul>`;
+    for (const item of history) {
+      html += `<li><b>${new Date(item.timestamp).toLocaleString()}</b>: ${item.result}</li>`;
+    }
+    html += `</ul>`;
+    resultBox.innerHTML = html;
+
+  } catch (error) {
+    console.error("History error:", error);
+    alert("❌ Chyba pri načítaní histórie: " + error.message);
+  }
+}
+
     async function submitLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
