@@ -396,6 +396,10 @@
         const formData = new FormData();
         formData.append("prompt", text);
         if (imageFile) formData.append("file", imageFile);
+
+        console.log("📨 Text (prompt):", text);
+        console.log("📸 Súbor:", imageFile);
+
     
         const response = await fetch(`${API_BASE}/api/diagnose`, {
           method: 'POST',
@@ -409,6 +413,8 @@
         }
     
         const data = await response.json();
+        console.log("✅ AI odpoveď:", data);
+
         resultBox.textContent = data.result || "Nepodarilo sa analyzovať";
       } catch (error) {
         console.error("Diagnose error:", error);
