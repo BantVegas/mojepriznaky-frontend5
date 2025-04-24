@@ -297,19 +297,27 @@
     <button onclick="closeAuthModal()" class="btn" style="margin-top:1rem; width:100%;">Zatvoriť</button>
   </div>
 </div>
-
 <!-- Modálne okno pre odoslanie analýzy doktorovi -->
 <div id="doctorModal" class="modal">
   <div class="modal-content">
     <h3>📤 Poslať analýzu doktorovi</h3>
+
     <label for="doctorEmail">E-mail doktora:</label>
     <input type="email" id="doctorEmail" class="modal-input" placeholder="napr. doktor@nemocnica.sk" />
+
     <label for="diagnosisSelect">Vyber analýzu:</label>
-    <select id="diagnosisSelect" class="modal-input"></select>
+    <select id="diagnosisSelect" class="modal-input" onchange="updateDiagnosisPreview()"></select>
+
+    <!-- 📋 Náhľad vybranej analýzy -->
+    <div id="selectedDiagnosisPreview" style="margin-top: 1rem; background: #f9f9f9; border-radius: 8px; padding: 1rem; border: 1px solid #ccc;">
+      <p><em>Po výbere analýzy sa tu zobrazí náhľad...</em></p>
+    </div>
+
     <button class="btn btn-primary" onclick="submitToDoctor()" style="width:100%; margin-top:1rem;">Odoslať</button>
     <button class="btn" onclick="closeDoctorModal()" style="width:100%; margin-top:0.5rem;">Zavrieť</button>
   </div>
 </div>
+
 
 <!-- Modálne okno pre registráciu -->
 <div id="registerModal" class="modal">
@@ -329,12 +337,17 @@
 
 <!-- Modálne okno pre históriu -->
 <div id="historyModal" class="modal">
-  <div class="modal-content">
-    <h2 style="text-align:center;">🕘 História AI analýz</h2>
-    <div id="historyList">Načítavam...</div>
-    <button class="btn" onclick="closeHistoryModal()" style="width:100%; margin-top:1rem;">Zavrieť</button>
+  <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+    <h2 style="text-align:center; margin-bottom: 1rem;">🕘 História AI analýz</h2>
+    
+    <div id="historyList" style="display: flex; flex-direction: column; gap: 1rem;">
+      <!-- dynamický obsah -->
+    </div>
+
+    <button class="btn" onclick="closeHistoryModal()" style="width:100%; margin-top:1.5rem;">Zavrieť</button>
   </div>
 </div>
+
 
 <script>
   const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
