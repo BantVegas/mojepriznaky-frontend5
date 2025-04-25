@@ -345,40 +345,63 @@
     overflow-y: auto;
     border-radius: 16px;
     padding: 2rem;
-    background: linear-gradient(135deg, #ffffff, #f0f4f8);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   ">
     <h2 style="
       text-align: center;
       margin-bottom: 1.5rem;
-      font-family: 'Poppins', sans-serif;
-      font-size: 2.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 2rem;
       color: #1e293b;
-      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+      font-weight: 700;
     ">
-      🕘 História AI analýz
+      🕘 História uložených analýz
     </h2>
-    
+
     <div id="historyList" style="
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
-      font-family: 'Roboto', sans-serif;
+      gap: 1rem;
       font-size: 1rem;
-      color: #334155;
-      background: #e2e8f0;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     ">
       <!-- dynamický obsah -->
     </div>
+
+    <div id="selectedDiagnosisPreview" style="
+      display: none;
+      margin-top: 2rem;
+      background: #f8fafc;
+      border: 2px solid #22d3ee;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    ">
+      <h3 style="
+        font-size: 1.25rem;
+        color: #2563eb;
+        margin-bottom: 1rem;
+      ">📄 Náhľad analýzy</h3>
+      <p id="diagnosisDate" style="color: #475569; margin-bottom: 0.5rem;"></p>
+      <pre id="diagnosisText" style="white-space: pre-wrap; color: #0f172a;"></pre>
+    </div>
+
+    <button id="savePdfBtn" onclick="saveSelectedDiagnosisAsPDF()" class="btn btn-primary" style="
+      display: none;
+      margin-top: 1.5rem;
+      width: 100%;
+    ">💾 Uložiť analýzu do PDF</button>
+
+    <button onclick="closeHistoryModal()" class="btn" style="
+      margin-top: 1rem;
+      width: 100%;
+      background: #f1f5f9;
+      color: #0f172a;
+      border-radius: 8px;
+    ">Zavrieť</button>
   </div>
 </div>
 
-    <button class="btn" onclick="closeHistoryModal()" style="width:100%; margin-top:1.5rem;">Zavrieť</button>
-  </div>
-</div>
 <script>
   const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
   let selectedDiagnosis = null;
