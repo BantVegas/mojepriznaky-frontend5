@@ -401,7 +401,36 @@
     ">Zavrieť</button>
   </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">function openAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function openRegisterModal() {
+  const modal = document.getElementById('registerModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeRegisterModal() {
+  const modal = document.getElementById('registerModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function closeDoctorModal() {
+  const modal = document.getElementById('doctorModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function closeHistoryModal() {
+  const modal = document.getElementById('historyModal');
+  if (modal) modal.style.display = 'none';
+}
+</script>
 <script>
 window.jsPDF = window.jspdf.jsPDF;
 
@@ -644,6 +673,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-  
 </body>
 </html>
