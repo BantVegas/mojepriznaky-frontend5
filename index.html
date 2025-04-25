@@ -675,13 +675,14 @@
   if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
 
   const { jsPDF } = window.jspdf;
-const doc = new jsPDF();
+  const doc = new jsPDF();
 
-const dejavu_normal = window.dejavu_normal; // ✅ doplnenie
+  const dejavu_normal = window.dejavu_normal; // musí byť načítané z externého súboru
 
-jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
-jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-doc.setFont('DejaVuSans', 'normal');
+  // Správne použitie fontu
+  doc.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
+  doc.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
+  doc.setFont('DejaVuSans', 'normal');
 
   const date = formatDateSK(selectedDiagnosis.timestamp);
   const lines = selectedDiagnosis.result.trim().split("\n");
@@ -727,7 +728,6 @@ doc.setFont('DejaVuSans', 'normal');
     });
   });
 
-  // Ak je obrázok súčasťou analýzy
   if (selectedDiagnosis.imageBase64) {
     if (y > 200) {
       doc.addPage();
