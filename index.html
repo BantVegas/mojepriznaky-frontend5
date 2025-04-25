@@ -675,12 +675,13 @@
   if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+const doc = new jsPDF();
 
-  // ✅ Pridanie fontu bez getFontList()
-  jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
-  jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-  doc.setFont('DejaVuSans', 'normal');
+const dejavu_normal = window.dejavu_normal; // ✅ doplnenie
+
+jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
+jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
+doc.setFont('DejaVuSans', 'normal');
 
   const date = formatDateSK(selectedDiagnosis.timestamp);
   const lines = selectedDiagnosis.result.trim().split("\n");
