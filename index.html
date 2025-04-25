@@ -430,6 +430,16 @@ function closeHistoryModal() {
   const modal = document.getElementById('historyModal');
   if (modal) modal.style.display = 'none';
 }
+function logout() {
+  localStorage.clear();
+  updateNavbar();
+  alert("Úspešne odhlásené!");
+}
+
+function openAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) modal.style.display = 'flex';
+}
 </script>
 <script>
 window.jsPDF = window.jspdf.jsPDF;
@@ -672,6 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
 
 </body>
 </html>
