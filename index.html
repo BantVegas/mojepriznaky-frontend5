@@ -401,13 +401,13 @@
     ">Zavrieť</button>
   </div>
 </div>
-
 <script>
   const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
   let selectedDiagnosis = null;
   
   function formatDateSK(timestamp) {
     return new Date(timestamp).toLocaleString("sk-SK", {
+      timeZone: "Europe/Bratislava",
       weekday: "short",
       year: "numeric",
       month: "short",
@@ -497,8 +497,7 @@
   
   function saveSelectedDiagnosisAsPDF() {
     if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new window.jspdf.jsPDF();
     const content = `Analýza zdravotného stavu\n\nDátum: ${formatDateSK(selectedDiagnosis.timestamp)}\n\nPopis:\n${selectedDiagnosis.result}`;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
@@ -510,7 +509,7 @@
     const token = localStorage.getItem("token");
     if (!token) return alert("Najprv sa prihláste");
     const text = document.getElementById('symptomText').value.trim();
-    const imageFile = document.getElementById('imageInput').files[0];
+    const imageFile = document.getElementById('imageInput')?.files[0];
     const resultBox = document.getElementById('result');
     if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
     resultBox.textContent = "🔍 Analyzujem...";
@@ -535,7 +534,6 @@
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
     if (!email || !password) return alert("Vyplňte všetky polia");
-  
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -560,7 +558,6 @@
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value.trim();
     if (!firstName || !lastName || !email || !password) return alert("Vyplňte všetky polia");
-  
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
@@ -582,7 +579,6 @@
   async function startPremiumCheckout() {
     const token = localStorage.getItem("token");
     if (!token) return alert("Najprv sa prihláste");
-  
     try {
       const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
         method: 'POST',
@@ -598,7 +594,6 @@
   async function checkPremiumUpgrade() {
     const token = localStorage.getItem("token");
     if (!token) return;
-  
     try {
       const res = await fetch(`${API_BASE}/api/me`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -625,36 +620,7 @@
   function setChildMode() {
     alert("Funkcia vo vývoji");
   }
-  
-  document.addEventListener('DOMContentLoaded', () => {
-    updateNavbar();
-    if (window.location.href.includes('checkout-success')) {
-      checkPremiumUpgrade();
-    }
-  
-    const imageInput = document.getElementById('imageInput');
-    const preview = document.createElement('img');
-    preview.id = "previewImage";
-    preview.style.cssText = "max-width:100%; margin-top:1rem; border:1px solid #ccc; border-radius:8px; display:none;";
-    imageInput.closest('.card').appendChild(preview);
-  
-    imageInput.addEventListener('change', () => {
-      const file = imageInput.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      } else {
-        preview.src = "";
-        preview.style.display = 'none';
-      }
-    });
-  });
   </script>
   
-
 </body>
 </html>
