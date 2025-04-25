@@ -416,7 +416,8 @@
     ">Zavrieť</button>
   </div>
 </div>
-<!-- predchádzajúce sekcie ostávajú -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
   window.jsPDF = window.jspdf.jsPDF;
   
@@ -666,6 +667,43 @@
       });
     }
   });
+  function saveSelectedDiagnosisAsPDF() {
+  if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const date = formatDateSK(selectedDiagnosis.timestamp);
+  const lines = selectedDiagnosis.result.trim().split("\n");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(14);
+  doc.setTextColor(33, 37, 41);
+
+  let y = 20;
+  doc.text("🩺 Analýza zdravotného stavu", 15, y);
+  y += 10;
+  doc.setFontSize(12);
+  doc.text(`📅 Dátum: ${date}`, 15, y);
+  y += 10;
+  doc.text("📝 Popis:", 15, y);
+  y += 8;
+
+  doc.setFontSize(11);
+  lines.forEach(line => {
+    const splitLines = doc.splitTextToSize(line, 180);
+    doc.text(splitLines, 15, y);
+    y += splitLines.length * 7;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  const fileName = `analyza-${new Date().toISOString().slice(0, 10)}.pdf`;
+  doc.save(fileName);
+}
+
   </script>
   
 </body>
