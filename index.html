@@ -671,32 +671,35 @@
   if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  const marginLeft = 20;
+  let y = 25;
 
   const date = formatDateSK(selectedDiagnosis.timestamp);
-  const lines = selectedDiagnosis.result.trim().split("\n");
+  const content = selectedDiagnosis.result.trim().split("\n");
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(14);
-  doc.setTextColor(33, 37, 41);
+  doc.setFontSize(16);
+  doc.text("Analýza zdravotného stavu", marginLeft, y);
+  y += 10;
 
-  let y = 20;
-  doc.text("🩺 Analýza zdravotného stavu", 15, y);
-  y += 10;
   doc.setFontSize(12);
-  doc.text(`📅 Dátum: ${date}`, 15, y);
+  doc.text(`Dátum: ${date}`, marginLeft, y);
   y += 10;
-  doc.text("📝 Popis:", 15, y);
+
+  doc.text("Popis:", marginLeft, y);
   y += 8;
 
   doc.setFontSize(11);
-  lines.forEach(line => {
-    const splitLines = doc.splitTextToSize(line, 180);
-    doc.text(splitLines, 15, y);
-    y += splitLines.length * 7;
-    if (y > 270) {
+  content.forEach(line => {
+    const wrapped = doc.splitTextToSize(line, 170);
+    doc.text(wrapped, marginLeft, y);
+    y += wrapped.length * 6;
+
+    if (y > 280) {
       doc.addPage();
-      y = 20;
+      y = 25;
     }
   });
 
