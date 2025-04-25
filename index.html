@@ -401,226 +401,249 @@
     ">Zavrieť</button>
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-  const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
-  let selectedDiagnosis = null;
-  
-  function formatDateSK(timestamp) {
-    return new Date(timestamp).toLocaleString("sk-SK", {
-      timeZone: "Europe/Bratislava",
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  }
-  
-  function openAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
-  function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
-  function openRegisterModal() { document.getElementById('registerModal').style.display = 'flex'; }
-  function closeRegisterModal() { document.getElementById('registerModal').style.display = 'none'; }
-  function openDoctorModal() { document.getElementById('doctorModal').style.display = 'flex'; }
-  function closeDoctorModal() { document.getElementById('doctorModal').style.display = 'none'; }
-  function openHistoryModal() { document.getElementById('historyModal').style.display = 'flex'; }
-  function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
-  
-  function logout() {
-    localStorage.clear();
-    updateNavbar();
-    alert("Úspešne odhlásené!");
-  }
-  
-  function updateNavbar() {
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || null);
-    const loginBtn = document.querySelector('.btn.btn-outline');
-    const premiumBtn = document.querySelector('.btn.btn-filled');
-  
-    if (loginBtn) {
-      if (token && user) {
-        loginBtn.textContent = user.initials || "Ú";
-        loginBtn.onclick = logout;
-        loginBtn.style.cssText = "font-weight: bold; font-size: 1rem; text-transform: uppercase;";
-      } else {
-        loginBtn.textContent = "LOGIN";
-        loginBtn.onclick = openAuthModal;
-        loginBtn.style.cssText = "";
-      }
+window.jsPDF = window.jspdf.jsPDF;
+
+const API_BASE = "https://mojepriznakynew1-production.up.railway.app";
+let selectedDiagnosis = null;
+
+function formatDateSK(timestamp) {
+  return new Date(timestamp).toLocaleString("sk-SK", {
+    timeZone: "Europe/Bratislava",
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function showHistory() {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Najprv sa prihláste");
+  document.getElementById("historyModal").style.display = "flex";
+  const historyList = document.getElementById("historyList");
+  const preview = document.getElementById("selectedDiagnosisPreview");
+  const saveBtn = document.getElementById("savePdfBtn");
+  preview.style.display = 'none';
+  saveBtn.style.display = 'none';
+  fetch(`${API_BASE}/api/diagnose/history`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  .then(res => res.json())
+  .then(history => {
+    localStorage.setItem("diagnosisHistory", JSON.stringify(history));
+    if (!history.length) {
+      historyList.innerHTML = "<p>Žiadne záznamy</p>";
+      return;
     }
-  
-    if (premiumBtn) {
-      premiumBtn.style.display = token ? "inline-block" : "none";
+    historyList.innerHTML = history.map((item, i) =>
+      `<div onclick="selectDiagnosis(${i})" style="cursor:pointer;padding:1rem;border:1px solid #ccc;border-radius:8px;background:#f8fafc;">
+        <strong>${formatDateSK(item.timestamp)}</strong>
+      </div>`
+    ).join("");
+  })
+  .catch(err => {
+    historyList.innerHTML = `<p style='color:red;'>Chyba: ${err.message}</p>`;
+  });
+}
+
+function selectDiagnosis(index) {
+  const history = JSON.parse(localStorage.getItem("diagnosisHistory") || "[]");
+  const item = history[index];
+  selectedDiagnosis = item;
+  document.getElementById("diagnosisDate").textContent = formatDateSK(item.timestamp);
+  document.getElementById("diagnosisText").textContent = item.result;
+  document.getElementById("selectedDiagnosisPreview").style.display = 'block';
+  document.getElementById("savePdfBtn").style.display = 'inline-block';
+}
+
+function saveSelectedDiagnosisAsPDF() {
+  if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
+  const doc = new jsPDF();
+  const content = `Analýza zdravotného stavu
+
+Dátum: ${formatDateSK(selectedDiagnosis.timestamp)}
+
+Popis:
+${selectedDiagnosis.result}`;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(content, 15, 20);
+  doc.save(`analyza-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+function sendSymptoms() {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Najprv sa prihláste");
+  const text = document.getElementById('symptomText').value.trim();
+  const imageFile = document.getElementById('imageInput')?.files[0];
+  const resultBox = document.getElementById('result');
+  if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
+  resultBox.textContent = "🔍 Analyzujem...";
+  const formData = new FormData();
+  formData.append("prompt", text);
+  if (imageFile) formData.append("file", imageFile);
+  fetch(`${API_BASE}/api/diagnose`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    resultBox.textContent = data.result || "Nepodarilo sa analyzovať";
+  })
+  .catch(err => {
+    resultBox.textContent = "❌ Chyba: " + err.message;
+  });
+}
+
+function updateNavbar() {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || null);
+  const loginBtn = document.querySelector('.btn.btn-outline');
+  const premiumBtn = document.querySelector('.btn.btn-filled');
+
+  if (loginBtn) {
+    if (token && user) {
+      loginBtn.textContent = user.initials || "Ú";
+      loginBtn.onclick = logout;
+      loginBtn.style.cssText = "font-weight: bold; font-size: 1rem; text-transform: uppercase;";
+    } else {
+      loginBtn.textContent = "LOGIN";
+      loginBtn.onclick = openAuthModal;
+      loginBtn.style.cssText = "";
     }
   }
-  
-  function showHistory() {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Najprv sa prihláste");
-    document.getElementById("historyModal").style.display = "flex";
-    const historyList = document.getElementById("historyList");
-    const preview = document.getElementById("selectedDiagnosisPreview");
-    const saveBtn = document.getElementById("savePdfBtn");
-    preview.style.display = 'none';
-    saveBtn.style.display = 'none';
-    fetch(`${API_BASE}/api/diagnose/history`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(history => {
-      localStorage.setItem("diagnosisHistory", JSON.stringify(history));
-      if (!history.length) {
-        historyList.innerHTML = "<p>Žiadne záznamy</p>";
-        return;
-      }
-      historyList.innerHTML = history.map((item, i) =>
-        `<div onclick="selectDiagnosis(${i})" style="cursor:pointer;padding:1rem;border:1px solid #ccc;border-radius:8px;background:#f8fafc;">
-          <strong>${formatDateSK(item.timestamp)}</strong>
-        </div>`
-      ).join("");
-    })
-    .catch(err => {
-      historyList.innerHTML = `<p style='color:red;'>Chyba: ${err.message}</p>`;
-    });
+
+  if (premiumBtn) {
+    premiumBtn.style.display = token ? "inline-block" : "none";
   }
-  
-  function selectDiagnosis(index) {
-    const history = JSON.parse(localStorage.getItem("diagnosisHistory") || "[]");
-    const item = history[index];
-    selectedDiagnosis = item;
-    document.getElementById("diagnosisDate").textContent = formatDateSK(item.timestamp);
-    document.getElementById("diagnosisText").textContent = item.result;
-    document.getElementById("selectedDiagnosisPreview").style.display = 'block';
-    document.getElementById("savePdfBtn").style.display = 'inline-block';
-  }
-  
-  function saveSelectedDiagnosisAsPDF() {
-    if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
-    const doc = new window.jspdf.jsPDF();
-    const content = `Analýza zdravotného stavu\n\nDátum: ${formatDateSK(selectedDiagnosis.timestamp)}\n\nPopis:\n${selectedDiagnosis.result}`;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(content, 15, 20);
-    doc.save(`analyza-${new Date().toISOString().slice(0, 10)}.pdf`);
-  }
-  
-  function sendSymptoms() {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Najprv sa prihláste");
-    const text = document.getElementById('symptomText').value.trim();
-    const imageFile = document.getElementById('imageInput')?.files[0];
-    const resultBox = document.getElementById('result');
-    if (!text && !imageFile) return alert("Zadajte príznaky alebo nahrajte foto");
-    resultBox.textContent = "🔍 Analyzujem...";
-    const formData = new FormData();
-    formData.append("prompt", text);
-    if (imageFile) formData.append("file", imageFile);
-    fetch(`${API_BASE}/api/diagnose`, {
+}
+
+async function submitLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!email || !password) return alert("Vyplňte všetky polia");
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      resultBox.textContent = data.result || "Nepodarilo sa analyzovať";
-    })
-    .catch(err => {
-      resultBox.textContent = "❌ Chyba: " + err.message;
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+    const data = await res.json();
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    closeAuthModal();
+    updateNavbar();
+    alert("Úspešné prihlásenie!");
+  } catch (error) {
+    alert(`Prihlásenie zlyhalo: ${error.message}`);
+  }
+}
+
+async function submitRegister() {
+  const firstName = document.getElementById('regFirstName').value.trim();
+  const lastName = document.getElementById('regLastName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value.trim();
+  if (!firstName || !lastName || !email || !password) return alert("Vyplňte všetky polia");
+  try {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName, email, password, subscriptionTier: "PACIENT" })
+    });
+    if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+    const data = await res.json();
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    closeRegisterModal();
+    updateNavbar();
+    alert("Úspešná registrácia!");
+  } catch (error) {
+    alert(`Registrácia zlyhala: ${error.message}`);
+  }
+}
+
+async function startPremiumCheckout() {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Najprv sa prihláste");
+  try {
+    const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const url = await res.text();
+    if (url.startsWith("https://")) window.location.href = url;
+  } catch (error) {
+    alert("Chyba pri platbe");
+  }
+}
+
+async function checkPremiumUpgrade() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.role === "PACIENT_PREMIUM") {
+      localStorage.setItem("user", JSON.stringify(data));
+      updateNavbar();
+      alert("🎉 Úspešne aktivované PREMIUM!");
+    }
+  } catch (error) {
+    console.error("Premium check error:", error);
+  }
+}
+
+function openEmergencyMap() {
+  window.open("https://www.google.com/maps/search/pohotovosť+v+okolí", "_blank");
+}
+
+function openDentalMap() {
+  window.open("https://www.google.com/maps/search/zubná+pohotovosť", "_blank");
+}
+
+function setChildMode() {
+  alert("Funkcia vo vývoji");
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  updateNavbar();
+  if (window.location.href.includes('checkout-success')) {
+    checkPremiumUpgrade();
+  }
+
+  const imageInput = document.getElementById('imageInput');
+  if (imageInput) {
+    const preview = document.createElement('img');
+    preview.id = "previewImage";
+    preview.style.cssText = "max-width:100%; margin-top:1rem; border:1px solid #ccc; border-radius:8px; display:none;";
+    imageInput.closest('.card')?.appendChild(preview);
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = "";
+        preview.style.display = 'none';
+      }
     });
   }
-  
-  async function submitLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    if (!email || !password) return alert("Vyplňte všetky polia");
-    try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-      const data = await res.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      closeAuthModal();
-      updateNavbar();
-      alert("Úspešné prihlásenie!");
-    } catch (error) {
-      alert(`Prihlásenie zlyhalo: ${error.message}`);
-    }
-  }
-  
-  async function submitRegister() {
-    const firstName = document.getElementById('regFirstName').value.trim();
-    const lastName = document.getElementById('regLastName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value.trim();
-    if (!firstName || !lastName || !email || !password) return alert("Vyplňte všetky polia");
-    try {
-      const res = await fetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, password, subscriptionTier: "PACIENT" })
-      });
-      if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-      const data = await res.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      closeRegisterModal();
-      updateNavbar();
-      alert("Úspešná registrácia!");
-    } catch (error) {
-      alert(`Registrácia zlyhala: ${error.message}`);
-    }
-  }
-  
-  async function startPremiumCheckout() {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Najprv sa prihláste");
-    try {
-      const res = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const url = await res.text();
-      if (url.startsWith("https://")) window.location.href = url;
-    } catch (error) {
-      alert("Chyba pri platbe");
-    }
-  }
-  
-  async function checkPremiumUpgrade() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.role === "PACIENT_PREMIUM") {
-        localStorage.setItem("user", JSON.stringify(data));
-        updateNavbar();
-        alert("🎉 Úspešne aktivované PREMIUM!");
-      }
-    } catch (error) {
-      console.error("Premium check error:", error);
-    }
-  }
-  
-  function openEmergencyMap() {
-    window.open("https://www.google.com/maps/search/pohotovosť+v+okolí", "_blank");
-  }
-  
-  function openDentalMap() {
-    window.open("https://www.google.com/maps/search/zubná+pohotovosť", "_blank");
-  }
-  
-  function setChildMode() {
-    alert("Funkcia vo vývoji");
-  }
-  </script>
+});
+</script>
+
   
 </body>
 </html>
