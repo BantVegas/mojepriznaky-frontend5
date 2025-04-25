@@ -677,13 +677,6 @@
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  const dejavu_normal = window.dejavu_normal; // musí byť načítané z externého súboru
-
-  // Správne použitie fontu
-  doc.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
-  doc.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-  doc.setFont('DejaVuSans', 'normal');
-
   const date = formatDateSK(selectedDiagnosis.timestamp);
   const lines = selectedDiagnosis.result.trim().split("\n");
 
@@ -698,21 +691,21 @@
     doc.addImage(img, "PNG", 15, 10, 20, 20);
   }
 
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.setFont("DejaVuSans", "bold");
   doc.text("MojePriznaky.sk", 40, 20);
 
   doc.setFontSize(16);
   doc.text("Analýza zdravotného stavu", 15, 40);
 
   doc.setFontSize(12);
-  doc.setFont("DejaVuSans", "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(`Dátum: ${date}`, 15, 48);
 
-  doc.setFont("DejaVuSans", "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("Popis:", 15, 60);
 
-  doc.setFont("DejaVuSans", "normal");
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   let y = 68;
 
@@ -733,15 +726,13 @@
       doc.addPage();
       y = 20;
     }
-    doc.setFont("DejaVuSans", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("Priložená fotografia:", 15, y + 10);
     doc.addImage(selectedDiagnosis.imageBase64, "JPEG", 15, y + 15, 100, 80);
   }
 
   doc.save(`analyza-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
-
-  </script>
-  
+</script>
 </body>
 </html>
