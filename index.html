@@ -233,6 +233,10 @@
       }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/jspdf@2.5.1/dist/polyfills.umd.min.js"></script>
+  <script src="https://unpkg.com/jspdf@2.5.1/dist/fonts/ttfs/dejavu-normal.js"></script>
+  
 </head>
 <body>
   <div class="navbar">
@@ -670,8 +674,14 @@
   async function saveSelectedDiagnosisAsPDF() {
   if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
 
-  const { jsPDF } = window.jspdf;
+  
   const doc = new jsPDF();
+
+  jsPDF.API.events.push(['addFonts', () => {
+    jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
+    jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
+  }]);
+  doc.setFont("DejaVuSans", "normal");
 
   // Základné údaje
   const date = formatDateSK(selectedDiagnosis.timestamp);
