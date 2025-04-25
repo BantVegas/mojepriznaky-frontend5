@@ -671,40 +671,67 @@
   if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const doc = new jsPDF();
 
-  const marginLeft = 20;
-  let y = 25;
-
-  const date = formatDateSK(selectedDiagnosis.timestamp);
-  const content = selectedDiagnosis.result.trim().split("\n");
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(16);
-  doc.text("Analýza zdravotného stavu", marginLeft, y);
-  y += 10;
-
-  doc.setFontSize(12);
-  doc.text(`Dátum: ${date}`, marginLeft, y);
-  y += 10;
-
-  doc.text("Popis:", marginLeft, y);
-  y += 8;
-
-  doc.setFontSize(11);
-  content.forEach(line => {
-    const wrapped = doc.splitTextToSize(line, 170);
-    doc.text(wrapped, marginLeft, y);
-    y += wrapped.length * 6;
-
-    if (y > 280) {
-      doc.addPage();
-      y = 25;
-    }
+  const date = new Date(selectedDiagnosis.timestamp).toLocaleString("sk-SK", {
+    timeZone: "Europe/Bratislava",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit"
   });
 
-  const fileName = `analyza-${new Date().toISOString().slice(0, 10)}.pdf`;
-  doc.save(fileName);
+  const appName = "MojePriznaky.sk";
+  const email = "mojepriznaky@gmail.com";
+  const note = "Tento dokument neslúži ako oficiálna lekárska diagnóza.";
+  const title = "Analýza zdravotného stavu";
+  const subtitle = `Dátum: ${date}`;
+  const heading = "Popis:";
+  const bodyText = selectedDiagnosis.result.trim();
+
+  // === HLAVIČKA ===
+  const logo = new Image();
+  logo.src = "logo.png";
+
+  logo.onload = () => {
+    doc.addImage(logo, "PNG", 15, 10, 20, 20); // x, y, šírka, výška
+    doc.setFontSize(16);
+    doc.setTextColor(33, 37, 41);
+    doc.text(appName, 40, 22);
+
+    // === HLAVNÝ OBSAH ===
+    let y = 40;
+    doc.setFontSize(18);
+    doc.text(title, 20, y);
+    y += 10;
+
+    doc.setFontSize(12);
+    doc.text(subtitle, 20, y);
+    y += 15;
+
+    doc.setFontSize(14);
+    doc.text(heading, 20, y);
+    y += 10;
+
+    doc.setFontSize(12);
+    const lines = doc.splitTextToSize(bodyText, 170);
+    doc.text(lines, 20, y);
+    y += lines.length * 6;
+
+    // === PÄTIČKA ===
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    const footerY = 285;
+    doc.line(20, footerY - 3, 190, footerY - 3); // horizontálna čiara
+    doc.text(note, 20, footerY);
+    doc.text(`Kontakt: ${email}`, 20, footerY + 6);
+    doc.text("© 2025 MojePriznaky.sk – Všetky práva vyhradené.", 20, footerY + 12);
+
+    // === ULOŽ PDF ===
+    doc.save(`analyza-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
 }
 
   </script>
