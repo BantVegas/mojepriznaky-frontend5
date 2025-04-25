@@ -674,60 +674,54 @@
   async function saveSelectedDiagnosisAsPDF() {
   if (!selectedDiagnosis) return alert("Najprv si vyberte analýzu.");
 
-  
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  jsPDF.API.events.push(['addFonts', () => {
+  // 🔁 Pridaj font iba raz
+  if (!jsPDF.API.getFontList()['DejaVuSans']) {
     jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
     jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-  }]);
-  doc.setFont("DejaVuSans", "normal");
+  }
 
-  // Základné údaje
+  doc.setFont('DejaVuSans', 'normal');
+
   const date = formatDateSK(selectedDiagnosis.timestamp);
   const lines = selectedDiagnosis.result.trim().split("\n");
 
-  // Hlavička s logom
-  const logoUrl = "logo.png"; // ak máš inú cestu, zmeň to
-
+  // LOGO
   const img = new Image();
-  img.src = logoUrl;
-
+  img.src = "logo.png";
   await new Promise(resolve => {
-    img.onload = () => resolve();
-    img.onerror = () => resolve(); // fallback ak sa nepodarí načítať
+    img.onload = resolve;
+    img.onerror = resolve;
   });
-
   if (img.complete) {
     doc.addImage(img, "PNG", 15, 10, 20, 20);
   }
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("MojePriznaky.sk", 40, 20);
 
   // Nadpis
+  doc.setFontSize(14);
+  doc.setFont("DejaVuSans", "bold");
+  doc.text("MojePriznaky.sk", 40, 20);
+
   doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
   doc.text("Analýza zdravotného stavu", 15, 40);
 
-  // Dátum
   doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("DejaVuSans", "normal");
   doc.text(`Dátum: ${date}`, 15, 48);
 
-  // Popis
-  doc.setFont("helvetica", "bold");
+  doc.setFont("DejaVuSans", "bold");
   doc.text("Popis:", 15, 60);
 
-  // Text analýzy
-  doc.setFont("helvetica", "normal");
+  doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(11);
-  let y = 68;
 
+  let y = 68;
   lines.forEach(line => {
-    const splitLines = doc.splitTextToSize(line, 180);
-    splitLines.forEach(txt => {
-      doc.text(txt, 15, y);
+    const split = doc.splitTextToSize(line, 180);
+    split.forEach(part => {
+      doc.text(part, 15, y);
       y += 6;
       if (y > 270) {
         doc.addPage();
@@ -736,13 +730,13 @@
     });
   });
 
-  // Obrázok ak existuje
+  // Pridaj obrázok ak existuje
   if (selectedDiagnosis.imageBase64) {
-    if (y > 240) {
+    if (y > 200) {
       doc.addPage();
       y = 20;
     }
-    doc.setFont("helvetica", "bold");
+    doc.setFont("DejaVuSans", "bold");
     doc.text("Priložená fotografia:", 15, y + 10);
     doc.addImage(selectedDiagnosis.imageBase64, "JPEG", 15, y + 15, 100, 80);
   }
