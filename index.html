@@ -677,12 +677,9 @@
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  // 🔁 Pridaj font iba raz
-  if (!jsPDF.API.getFontList()['DejaVuSans']) {
-    jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
-    jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
-  }
-
+  // ✅ Pridanie fontu bez getFontList()
+  jsPDF.API.addFileToVFS('DejaVuSans.ttf', dejavu_normal);
+  jsPDF.API.addFont('DejaVuSans.ttf', 'DejaVuSans', 'normal');
   doc.setFont('DejaVuSans', 'normal');
 
   const date = formatDateSK(selectedDiagnosis.timestamp);
@@ -699,7 +696,6 @@
     doc.addImage(img, "PNG", 15, 10, 20, 20);
   }
 
-  // Nadpis
   doc.setFontSize(14);
   doc.setFont("DejaVuSans", "bold");
   doc.text("MojePriznaky.sk", 40, 20);
@@ -716,12 +712,12 @@
 
   doc.setFont("DejaVuSans", "normal");
   doc.setFontSize(11);
-
   let y = 68;
+
   lines.forEach(line => {
-    const split = doc.splitTextToSize(line, 180);
-    split.forEach(part => {
-      doc.text(part, 15, y);
+    const wrapped = doc.splitTextToSize(line, 180);
+    wrapped.forEach(wrap => {
+      doc.text(wrap, 15, y);
       y += 6;
       if (y > 270) {
         doc.addPage();
@@ -730,7 +726,7 @@
     });
   });
 
-  // Pridaj obrázok ak existuje
+  // Ak je obrázok súčasťou analýzy
   if (selectedDiagnosis.imageBase64) {
     if (y > 200) {
       doc.addPage();
@@ -741,8 +737,7 @@
     doc.addImage(selectedDiagnosis.imageBase64, "JPEG", 15, y + 15, 100, 80);
   }
 
-  const fileName = `analyza-${new Date().toISOString().slice(0, 10)}.pdf`;
-  doc.save(fileName);
+  doc.save(`analyza-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
   </script>
